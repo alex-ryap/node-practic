@@ -2,19 +2,31 @@ import colors from 'colors';
 
 let [min, max] = process.argv.slice(2);
 
-const minNumber = +min;
-const maxNumber = +max;
+const minNumber = Number(min);
+const maxNumber = Number(max);
 
-if (!minNumber) console.log(colors.red(`${min} is not a Number`));
-if (!maxNumber) console.log(colors.red(`${max} is not a Number`));
+let isNumber = true;
+
+if (isNaN(minNumber)) {
+  console.log(colors.red(`${min} is not a Number`));
+  isNumber = false;
+}
+if (isNaN(maxNumber)) {
+  console.log(colors.red(`${max} is not a Number`));
+  isNumber = false;
+}
+
+if (!isNumber) process.exit();
 
 const isPrime = (num) => {
   if (num === 1 || num <= 0) return false;
 
-  const sqrtNum = Math.round(Math.sqrt(num));
+  if (num === 2) return true;
+
+  const sqrtNum = Math.ceil(Math.sqrt(num));
 
   for (let i = 2; i <= sqrtNum; i++) {
-    if (num % i == 0) return false;
+    if (num % i === 0) return false;
   }
   return true;
 };
@@ -22,7 +34,7 @@ const isPrime = (num) => {
 const printColorsResult = (arr) => {
   if (arr.length === 0) console.log(colors.red('Not found primes number'));
 
-  let count = 0;
+  let count = 1;
 
   arr.map((item) => {
     if (count > 3) count = 1;
@@ -38,5 +50,4 @@ const arrPrime = [];
 for (let i = minNumber; i <= maxNumber; i++) {
   isPrime(i) && arrPrime.push(i);
 }
-
 printColorsResult(arrPrime);
