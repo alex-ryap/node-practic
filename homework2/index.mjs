@@ -29,7 +29,16 @@ class Timer {
 
   /** Display remaining time */
   print(duration) {
-    return `${duration.hours()}h ${duration.minutes()}m ${duration.seconds()}s`;
+    let remainingTime = '';
+
+    if (duration.years() > 0) remainingTime += `${duration.years()}Y `;
+    if (duration.months() > 0) remainingTime += `${duration.months()}M `;
+    if (duration.days() > 0) remainingTime += `${duration.days()}D `;
+    if (duration.hours() > 0) remainingTime += `${duration.hours()}h `;
+    if (duration.minutes() > 0) remainingTime += `${duration.minutes()}m `;
+    if (duration.seconds() > 0) remainingTime += `${duration.seconds()}s`;
+
+    return remainingTime;
   }
 
   /** Call set action */
