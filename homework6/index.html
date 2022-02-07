@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <title>Socket.io</title>
+  </head>
+  <body>
+    <input id="input" type="text" />
+    <button id="button">Send</button>
+    <div id="messages"></div>
+
+    <script>
+      const socket = io('http://localhost:8888');
+
+      const messagesBlock = document.querySelector('#messages');
+      const sendButton = document.querySelector('#button');
+      const input = document.querySelector('#input');
+
+      socket.on('connect', () => {
+        console.log('Connect');
+      });
+
+      socket.io.on('reconnect', () => {
+        socket.emit('reconnect_client');
+      });
+
+      socket.on('server_msg', (data) => {
+        const newMessage = createNewMessage(data);
+        messagesBlock.insertAdjacentHTML('afterbegin', newMessage);
+      });
+
+      socket.on('new_client', (data) => {
+        const newConnection = createInfoConnection(data, 'connected');
+        messagesBlock.insertAdjacentHTML('afterbegin', newConnection);
+      });
+
+      socket.on('out_client', (data) => {
+        const newDisconnection = createInfoConnection(data, 'disconnected');
+        messagesBlock.insertAdjacentHTML('afterbegin', newDisconnection);
+      });
+
+      socket.on('re_client', (data) => {
+        const newReconnection = createInfoConnection(data, 'reconnected');
+        messagesBlock.insertAdjacentHTML('afterbegin', newReconnection);
+      });
+
+      sendButton.addEventListener('click', () => {
+        const data = {
+          message: input.value,
+        };
+
+        socket.emit('client_msg', data);
+        input.value = '';
+      });
+
+      const createNewMessage = (data) => {
+        return `<div class="message">
+          <p><b>${data.name}</b>: ${data.message}</p>
+        </div>`;
+      };
+
+      const createInfoConnection = (data, info) => {
+        return `<div class="connection">
+          <p><i style="color: gray">${data.name} ${info}</i></p>
+          </div>`;
+      };
+
+      window.document.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          sendButton.click();
+        }
+      });
+    </script>
+  </body>
+</html>
