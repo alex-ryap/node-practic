@@ -5,7 +5,9 @@ const { join } = require('path');
 const generateName = require('./name');
 
 const server = http.createServer((req, res) => {
-  const filePath = join(__dirname, 'index.html');
+  let filePath = join(__dirname, 'index.html');
+
+  if (req.url === '/style.css') filePath = join(__dirname, 'style.css');
 
   const readStream = createReadStream(filePath);
 
@@ -13,10 +15,14 @@ const server = http.createServer((req, res) => {
 });
 
 const socket = io(server);
+let listOfClients = [];
 
 socket.on('connection', (client) => {
   const name = generateName();
-  client.broadcast.emit('new_client', { name: name });
+  listOfClients.push(name);
+
+  client.broadcast.emit('new_client', { name: name, clients: listOfClients });
+  client.emit('new_client', { name: name, clients: listOfClients });
 
   client.on('client_msg', (data) => {
     const payload = {
@@ -28,7 +34,9 @@ socket.on('connection', (client) => {
   });
 
   client.on('disconnect', () => {
-    client.broadcast.emit('out_client', { name: name });
+    listOfClients = listOfClients.filter((item) => item !== name);
+    client.broadcast.emit('out_client', { name: name, clients: listOfClients });
+    client.emit('out_client', { name: name, clients: listOfClients });
   });
 
   client.on('reconnect_client', () => {
