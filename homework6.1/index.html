@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="/socket.io/socket.io.js"></script>
+    <link rel="stylesheet" href="./style.css" />
+    <title>Chat Socket.io</title>
+  </head>
+  <body>
+    <div class="chat">
+      <div class="users">
+        <h2 class="users__title">Online users:</h2>
+        <div class="users__list"></div>
+      </div>
+      <div class="messages">
+        <div class="messages__list"></div>
+        <div class="messages__write">
+          <input class="messages__input" type="text" />
+          <button class="messages__btn">Send</button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const socket = io('http://localhost:8888');
+
+      const messagesBlock = document.querySelector('.messages__list');
+      const usersBlock = document.querySelector('.users__list');
+      const sendButton = document.querySelector('.messages__btn');
+      const input = document.querySelector('.messages__input');
+
+      socket.on('connect', () => {
+        console.log('Connect');
+      });
+
+      socket.io.on('reconnect', () => {
+        socket.emit('reconnect_client');
+      });
+
+      socket.on('server_msg', (data) => {
+        addMessageBlock(createNewMessage(data));
+      });
+
+      socket.on('new_client', (data) => {
+        addMessageBlock(createInfoConnection(data, 'connected'));
+        updateUsersList(data.clients);
+      });
+
+      socket.on('out_client', (data) => {
+        addMessageBlock(createInfoConnection(data, 'disconnected'));
+        updateUsersList(data.clients);
+      });
+
+      socket.on('re_client', (data) => {
+        addMessageBlock(createInfoConnection(data, 'reconnected'));
+      });
+
+      sendButton.addEventListener('click', () => {
+        const data = {
+          message: input.value,
+        };
+
+        socket.emit('client_msg', data);
+        input.value = '';
+      });
+
+      const addMessageBlock = (messageBlock) => {
+        messagesBlock.insertAdjacentHTML('afterbegin', messageBlock);
+      };
+
+      const updateUsersList = (clients) => {
+        usersBlock.innerHTML = '';
+
+        clients.map((client) => {
+          const userBlock = createNewUser(client);
+          usersBlock.innerHTML += userBlock;
+        });
+      };
+
+      const createNewMessage = (data) => {
+        return `<div class="message">
+          <b>${data.name}</b>: ${data.message}
+        </div>`;
+      };
+
+      const createInfoConnection = (data, info) => {
+        return `<div class="message message__connection">
+          <i>${data.name} ${info}</i>
+          </div>`;
+      };
+
+      const createNewUser = (name) => {
+        return `<div class="user">
+            <b>${name}</b>
+          </div>`;
+      };
+
+      window.document.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+          sendButton.click();
+        }
+      });
+    </script>
+  </body>
+</html>
